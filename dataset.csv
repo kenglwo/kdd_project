@@ -1,0 +1,9 @@
+name, number_of_classes, training_size, testing_size, time_series_length
+ArrowHead, 3, 36, 175, 251
+Beef, 5, 30, 30, 470
+BeetleFly, 2, 20, 20, 512
+BirdChicken, 2, 20, 20, 512
+BME, 3, 30, 150, 128
+Car, 4, 60, 60, 577
+CBF, 3, 30, 900, 128
+Chinatown, 2, 20, 343, 24

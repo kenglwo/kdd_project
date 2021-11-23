@@ -1,0 +1,361 @@
+---
+title: "MiniRocket Vis"
+author: "Kento Shigyo"
+date: "11/9/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("tidyverse")
+install.packages("cowplot")
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(cowplot)
+```
+
+## Visualize dataset info
+```{r}
+# dataset_info_old <- read_csv("results_all.csv")
+# dataset_info <- read_csv("results_new.csv")
+dataset_info_correct <- read_csv("results_correct.csv")
+```
+
+## Dataset information
+```{r}
+x_labels_with_class_num <- dataset_info %>% 
+  select(dataset_name, n_classes) %>% 
+  mutate(x_labels=str_c(dataset_name, ":", n_classes)) %>% 
+  pull(x_labels) %>% 
+  unique()
+
+dataset_info_correct %>% 
+  arrange(size_train) %>% 
+  filter(transformer_name=="minirocket") %>% 
+  ggplot() +
+  geom_bar(aes(x=dataset_name, y=size_test, fill=dataset_name), stat='identity')  +
+  geom_bar(aes(x=dataset_name, y=size_train, alpha=0.3), stat="identity") +
+  # scale_x_discrete(labels=x_labels_with_class_num) +
+  scale_fill_discrete(labels=x_labels_with_class_num) +
+  scale_alpha(labels = "training size") +
+  ggtitle("Dataset Information") +
+  labs(x="Dataset name", y="Testing size and training size in alpha", fill="Dataset:classes", alpha="Alpha") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  
+```
+
+# Visualization of the results with some datasets
+
+## Transformation time with training data (our Mini Rocket vs our Rocket)
+
+```{r}
+dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  filter(transformer_name %in% c("minirocket", "rocket")) %>% 
+  # mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>% 
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=time_transform_train, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8)  +
+  scale_fill_manual(values=c("#01BFC4", "#F9766D")) +
+  ggtitle("Transformation time with training data") +
+  labs(x="Dataset name", y="Trasformation time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+## Transformation time with training data (our models vs the original models)xs
+
+```{r}
+g1 <- dataset_info_correct %>% 
+  filter(transformer_name %in% c("minirocket", "sktimeminirocket")) %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c( "minirocket","sktimeminirocket"))) %>%
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_transform_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.8)  +
+  scale_fill_manual(values=c("#01BFC4", "gray60")) +
+  # scale_y_continuous(limits = c(0, 50)) +
+  ggtitle("Transformation time with training data") +
+  labs(x="Dataset name", y="Trasformation time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top")
+
+g2 <- dataset_info_correct %>% 
+  filter(transformer_name %in% c("rocket", "sktimerocket")) %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("rocket", "sktimerocket"))) %>%
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_transform_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.8)  +
+  scale_fill_manual(values=c("#F9766D", "gray60")) +
+  ggtitle("Transformation time with training data") +
+  labs(x="Dataset name", y="Trasformation time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top") 
+
+plot_grid(g1, g2, labels=c("", ""), ncol=1, nrow=2)
+```
+
+
+## Transformation time with training data (Mini Rocket family)
+```{r}
+g1 <- dataset_info_correct %>% 
+  filter(transformer_name %in% c("rocket", "minirocket")) %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("minirocket", "rocket"))) %>%
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_transform_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("#01BFC4", "#F9766D")) +
+  # scale_y_continuous(limits = c(0, 50)) +
+  ggtitle("Transformation time with training data") +
+  labs(x="Dataset name", y="Trasformation time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top")
+
+g2 <- dataset_info_correct %>% 
+  filter(transformer_name %in% c("minirocket", "deterministicminirocket")) %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("minirocket", "deterministicminirocket"))) %>%
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_transform_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.8)  +
+  scale_fill_manual(values=c("#01BFC4", "#FC813E")) +
+  # scale_y_continuous(limits = c(0, 50)) +
+  ggtitle("Transformation time with training data") +
+  labs(x="Dataset name", y="Trasformation time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top")
+
+
+
+plot_grid(g1, g2, labels=c("", ""), ncol=1, nrow=2)
+```
+
+
+
+## Transformation time with testing data 
+```{r}
+dataset_info_correct %>% 
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot() +
+  geom_bar(aes(x=dataset_name, y=time_transform_test, fill=transformer_name), stat='identity', position=position_dodge())  +
+  ggtitle("Time for transformation with testing data") +
+  labs(x="Dataset name", y="Time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+## Transformation time with training data 2
+```{r}
+dataset_info_correct %>% 
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot() +
+  geom_bar(aes(x=dataset_name, y=time_transform_train, fill=transformer_name), stat='identity')  +
+  # geom_bar(aes(x=dataset_name, y=time_transform_test, fill=transformer_name), stat='identity', position=position_dodge())  +
+  ggtitle("Time for transformation with training data") +
+  labs(x="Dataset name", y="Time", fill="Transformer name") +
+  facet_wrap(~transformer_name, ncol=1)+
+  # facet_grid(dataset_name ~ . )
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+## Transformation time with testing data 2
+```{r}
+dataset_info_correct %>% 
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test) %>% 
+  ggplot() +
+  geom_bar(aes(x=dataset_name, y=time_transform_test, fill=transformer_name), stat='identity')  +
+  # geom_bar(aes(x=dataset_name, y=time_transform_test, fill=transformer_name), stat='identity', position=position_dodge())  +
+  ggtitle("Time for transformation with testing data") +
+  labs(x="Dataset name", y="Time", fill="Transformer name") +
+  facet_wrap(~transformer_name, ncol=1)+
+  # facet_grid(dataset_name ~ . )
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+# Training time
+```{r}
+dataset_info_correct %>% 
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test, time_train, time_total) %>% 
+  ggplot() +
+  # geom_bar(aes(x=dataset_name, y=time_total, fill=transformer_name), stat='identity')  +
+  geom_col(aes(x=dataset_name, y=time_train, fill=transformer_name), stat='identity', position=position_dodge(0.5), width=0.8)  +
+  ggtitle("Training time") +
+  labs(x="Dataset name", y="Time", fill="Transformer name") +
+  # facet_wrap(~transformer_name, ncol=1)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+g1 <- dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  select(dataset_name, transformer_name,  time_train) %>% 
+  mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>%
+  filter(group == "type_minirocket") %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.5)  +
+  scale_fill_manual(values=c("gray60", "#01BFC4")) +
+  # scale_y_continuous(limits = c(0, 65)) +
+  ggtitle("Training time") +
+  labs(x="Dataset name", y="Training time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  # theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+
+g2 <- dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  select(dataset_name, transformer_name,  time_train) %>% 
+  mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>%
+  filter(group == "type_rocket") %>% 
+  ggplot(mapping=aes(x=dataset_name, y=time_train, fill=transformer_name)) +
+  geom_col(stat='identity', position=position_dodge(0.8), width=0.8)  +
+  scale_fill_manual(values=c("gray60", "#F9766D")) +
+  # scale_y_continuous(limits = c(0, 65)) +
+  ggtitle("Training time") +
+  labs(x="Dataset name", y="Training time", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+plot_grid(g1, g2, labels=c("", ""), ncol=1, nrow=2)
+```
+
+
+## Total time
+```{r}
+dataset_info_correct %>% 
+  select(dataset_name, transformer_name,  time_transform_train, time_transform_test, time_train, time_total) %>% 
+  ggplot() +
+  # geom_bar(aes(x=dataset_name, y=time_total, fill=transformer_name), stat='identity')  +
+  geom_bar(aes(x=dataset_name, y=time_total, fill=transformer_name), stat='identity', position=position_dodge())  +
+  ggtitle("Total time") +
+  labs(x="Dataset name", y="Time", fill="Transformer name") +
+  # facet_wrap(~transformer_name, ncol=1)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+## Classifier Score
+```{r}
+dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket", "deterministicminirocket"))) %>%
+  select(dataset_name, transformer_name,  classifier_score) %>% 
+  # filter(transformer_name %in%  c("minirocket", "rocket")) %>%
+  filter(transformer_name %in%  c("deterministicminirocket", "minirocket")) %>%
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=classifier_score, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("#01BFC4", "#F9766D")) +
+  guides(fill=guide_legend(reverse = TRUE)) +
+  ggtitle("Classifier scores of transformers") +
+  labs(x="Dataset Name", y="Classifier Score", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  coord_flip() 
+
+
+```
+
+
+```{r}
+g1 <- dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>%
+  filter(group == "type_minirocket") %>%
+  select(dataset_name, transformer_name,  classifier_score) %>% 
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=classifier_score, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("gray60", "#01BFC4", "gray60", "#F9766D")) +
+  guides(fill=guide_legend(reverse = FALSE)) +
+  ggtitle("Classifier score of transformers") +
+  labs(x="Dataset Name", y="Classifier Score", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top") +
+  coord_flip() 
+
+g2 <- dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>%
+  filter(group == "type_rocket") %>%
+  select(dataset_name, transformer_name,  classifier_score) %>% 
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=classifier_score, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("gray60", "#F9766D")) +
+  guides(fill=guide_legend(reverse = TRUE)) +
+  ggtitle("Classifier score of transformers") +
+  labs(x="Dataset Name", y="Classifier Score", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.y = element_blank(), legend.position="top") +
+  # theme(axis.text.y = element_blank(), axis.title.y = element_blank(), legend.position="top") +
+  coord_flip() 
+
+plot_grid(g1, g2, labels=c("", ""), ncol=2, nrow=1)
+```
+
+```{r}
+score_rocket_minirocket <- dataset_info_correct %>% 
+  mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket"))) %>%
+  # mutate(group = if_else(str_detect(transformer_name, pattern="minirocket"), "type_minirocket", "type_rocket")) %>%
+  # filter(group == "type_minirocket") %>%
+  filter(transformer_name %in% c("rocket", "minirocket")) %>% 
+  select(dataset_name, transformer_name,  classifier_score) %>% 
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=classifier_score, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("#01BFC4", "#F9766D")) +
+  guides(fill=guide_legend(reverse = FALSE)) +
+  ggtitle("Classifier score of transformers") +
+  labs(x="Dataset Name", y="Classifier Score", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  legend.position="top", axis.title.y = element_blank()) +
+  coord_flip() 
+
+score_deter_mini <- dataset_info_correct %>% 
+   mutate(transformer_name = factor(transformer_name, levels=c("sktimeminirocket", "minirocket", "sktimerocket", "rocket", "deterministicminirocket"))) %>%
+  filter(transformer_name %in% c("deterministicminirocket", "minirocket")) %>% 
+  select(dataset_name, transformer_name,  classifier_score) %>% 
+  ggplot() +
+  geom_col(aes(x=dataset_name, y=classifier_score, fill=transformer_name), stat='identity', position=position_dodge(0.8), width=0.8) +
+  scale_fill_manual(values=c("#01BFC4", "#FC813E")) +
+  guides(fill=guide_legend(reverse = FALSE)) +
+  ggtitle("Classifier score of transformers") +
+  labs(x="Dataset Name", y="Classifier Score", fill="Transformer name") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position="top") +
+  coord_flip() 
+
+plot_grid(score_rocket_minirocket, score_deter_mini, labels=c("A", "B"), ncol=2, nrow=1)
+
+```
+
+
+
+```{r}
+size_train <-  dataset_info %>% 
+  filter(transformer_name == "minirocket") %>% 
+  select(size_train)
+
+dataset_name <- dataset_info %>% filter(transformer_name == "minirocket") %>% select(dataset_name)
+
+time_transform_minirocket <- dataset_info %>% 
+  filter(transformer_name == "minirocket") %>% 
+  rename(y = time_transform_train) %>% 
+  select(y)
+
+time_transform_sktimerocket <- dataset_info %>% 
+  filter(transformer_name == "sktimerocket") %>% 
+  rename(x = time_transform_train) %>% 
+  select(x)
+
+time_transform_deterministicminirocket <- dataset_info %>% 
+  filter(transformer_name == "deterministicminirocket") %>% 
+  rename(x = time_transform_train) %>% 
+  select(x)
+
+time_transform_rocket <- dataset_info %>% 
+  filter(transformer_name == "rocket") %>% 
+  rename(x = time_transform_train) %>% 
+  select(x)
+  
+a <-data.frame(x=time_transform_rocket, y=time_transform_minirocket, size_train = size_train) %>%
+  mutate(is_better = if_else( y < x, TRUE, FALSE))
+dummy <- data.frame(-10, -10, 200, FALSE)
+names(dummy) <- c("x", "y", "size_train", "is_better")
+a <- rbind(a, dummy)
+
+  
+ggplot(data=a, aes(x=x, y=y)) +
+  geom_point(aes(size=size_train, color=is_better),  alpha=0.3) +
+  scale_color_manual(values=c("red", "blue"), labels=c("False", "True"), drop=FALSE, name="Mini Rocket is better") +
+  xlim(0, 30) + ylim(0, 30) +
+  # xlim(0, 3) + ylim(0, 3) +
+  geom_abline(slope=1, intercept=0) +
+  ggtitle("Tansformation time with training data") +
+  labs(x="Transformation time of our Rocket", y="Transformation time of our Mini Rocket", size="Training size")
+```
+
+
+
+
