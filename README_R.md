@@ -16,5 +16,6 @@ This code was created to do visualization tasks for the results of our project
 - Execute the following blocks to show the visualization charts
 - The visualization charts can be viewed by clicking the button in the red box below
 
-![view_button](https://www.dropbox.com/s/7zts1bogazj2epp/view_button.png?dl=0)
+<img width="1552" alt="view_button" src="https://user-images.githubusercontent.com/39261875/143032100-0fcdb3f1-a199-4134-8b99-c4a3e4f57636.png">
+
 
